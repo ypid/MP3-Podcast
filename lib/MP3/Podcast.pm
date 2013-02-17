@@ -48,6 +48,8 @@ use XML::RSS;
 use URI;
 use MP3::Info;
 use POSIX qw(strftime);
+use utf8;
+use Encode qw(decode);
 
 our $VERSION = '0.06';
 
@@ -101,14 +103,16 @@ sub podcast {
   my $podurl="$urlbase/$dir";
   
   #Read directory
-  opendir(D, "$poddir") || die "Couldn't open directory $poddir: $!\n";
-  my @files = readdir(D);
-  closedir(D) || die "Couldn't close dir $poddir\n";
+  my @files;
+  for (glob "$poddir/*") {
+      s/$poddir\///xms;
+      push @files, decode('utf8', $_);
+  }
   if ( $sort ) {
         @files = reverse(sort(@files));
   } 
   foreach my $file ( @files ) {
-    next if $file !~ /\.[Mm][Pp]3$/i;
+    next if $file !~ /\.mp3$/ixms;
     my $filePath="$poddir/$file";
     my @stat = stat($filePath);
     my $pubdate = strftime("%a, %e %b %Y %T %z", localtime($stat[9]));
